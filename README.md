@@ -26,7 +26,7 @@ The [features](docs/features/) directory has one document per service module exp
 
 ```bash
 git clone <repo-url>
-cd everycred-consent-management-backend
+cd consent-management
 poetry env use python3.12
 poetry install --no-root
 cp local.env .env   # then fill in your database and secret values
