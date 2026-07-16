@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CMP test page</title>
+    <style>
+      :root {
+        color-scheme: light;
+      }
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        background: #f4f6fb;
+        max-width: 860px;
+        margin: 34px auto;
+        padding: 0 16px 30px;
+        color: #1a1a1a;
+      }
+      h1 {
+        font-size: 24px;
+        margin-bottom: 8px;
+      }
+      p.lead {
+        color: #5b657a;
+        margin-top: 0;
+      }
+      .card {
+        border: 1px solid #e7eaf3;
+        border-radius: 12px;
+        padding: 16px;
+        margin: 16px 0;
+        background: #fff;
+        box-shadow: 0 6px 20px rgba(16, 24, 40, 0.06);
+      }
+      button {
+        appearance: none;
+        background: #1a73e8;
+        color: #fff;
+        border: 0;
+        border-radius: 8px;
+        padding: 8px 14px;
+        font-size: 14px;
+        cursor: pointer;
+        margin: 4px 6px 4px 0;
+      }
+      button.secondary {
+        background: #455063;
+        color: #fff;
+        border: 1px solid #455063;
+      }
+      button.danger {
+        background: #d93025;
+      }
+      pre {
+        background: #101322;
+        color: #d7f4d5;
+        padding: 12px;
+        border-radius: 8px;
+        overflow: auto;
+        font-size: 12px;
+        max-height: 320px;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+      label {
+        font-size: 13px;
+        color: #555;
+      }
+      input[type="text"] {
+        padding: 6px 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 13px;
+        min-width: 240px;
+      }
+      .status {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        background: #e9f9ef;
+        color: #1f7a3f;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Consent Management Platform - Test Page</h1>
+    <p class="lead">
+      This page simulates a client website that has embedded the CMP script.
+      Open the browser DevTools "Network" tab to inspect the requests.
+    </p>
+
+    <div class="card">
+      <div class="row">
+        <label for="api-base">API base:</label>
+        <input id="api-base" type="text" value="http://localhost:8000" />
+        <label for="data-domain">data-domain:</label>
+        <input id="data-domain" type="text" value="localhost" />
+        <button onclick="reloadScript()">Reload cmp.js</button>
+        <span class="status" id="cmp-status">CMP loading...</span>
+      </div>
+      <p style="color:#777;font-size:12px;margin:8px 0 0;">
+        Tip: serve this file via <code>python -m http.server 5500</code> from
+        <code>tests/manual/</code> so the page hostname is <code>localhost</code>.
+        Make sure you have a published consent template in DB whose user domain
+        equals the value above.
+      </p>
+    </div>
+
+    <div class="card">
+      <strong>Trigger consent banner</strong>
+      <div class="row" style="margin-top:8px">
+        <button onclick="CMP && CMP.open()">Privacy Settings (CMP.open)</button>
+        <button class="secondary" onclick="CMP && CMP.close()">Close</button>
+        <button class="secondary" onclick="CMP && CMP.accept().then(refresh)">CMP.accept()</button>
+        <button class="secondary" onclick="CMP && CMP.reject().then(refresh)">CMP.reject()</button>
+        <button class="danger" onclick="clearAll()">Clear localStorage + reload</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>Stored consent (CMP.getConsent)</strong>
+      <pre id="consent-out">(loading...)</pre>
+    </div>
+
+    <div class="card">
+      <strong>Loaded template (CMP.getTemplate)</strong>
+      <pre id="template-out">(loading...)</pre>
+    </div>
+
+    <div class="card">
+      <strong>onChange events</strong>
+      <pre id="events-out">(none yet)</pre>
+    </div>
+
+    <script>
+      function setStatus(text) {
+        document.getElementById("cmp-status").textContent = text;
+      }
+
+      function refresh() {
+        document.getElementById("consent-out").textContent = JSON.stringify(
+          (window.CMP && CMP.getConsent()) || null,
+          null,
+          2,
+        );
+        document.getElementById("template-out").textContent = JSON.stringify(
+          (window.CMP && CMP.getTemplate()) || null,
+          null,
+          2,
+        );
+      }
+
+      function clearAll() {
+        try {
+          localStorage.removeItem("cmp_visitor_ref");
+          localStorage.removeItem("cmp_consent_state");
+        } catch (_e) {}
+        location.reload();
+      }
+
+      function reloadScript() {
+        var apiBase = document.getElementById("api-base").value.trim();
+        var dom = document.getElementById("data-domain").value.trim();
+        var url = apiBase.replace(/\/$/, "") + "/sdk/cmp.js?_t=" + Date.now();
+        try {
+          delete window.CMP;
+        } catch (_e) {
+          window.CMP = undefined;
+        }
+        var s = document.createElement("script");
+        s.src = url;
+        if (dom) s.setAttribute("data-domain", dom);
+        s.onload = function () {
+          if (window.CMP && CMP.ready) {
+            setStatus("CMP ready");
+            CMP.ready().then(refresh);
+            CMP.onChange(function (c) {
+              var pre = document.getElementById("events-out");
+              pre.textContent =
+                new Date().toISOString() +
+                " " +
+                JSON.stringify(c) +
+                "\n" +
+                pre.textContent;
+              refresh();
+            });
+          } else {
+            setStatus("CMP failed to load");
+          }
+        };
+        document.body.appendChild(s);
+      }
+
+      window.addEventListener("load", function () {
+        reloadScript();
+      });
+    </script>
+  </body>
+</html>

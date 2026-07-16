@@ -1,0 +1,539 @@
+------------------------------------<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CMP Open Consent Demo</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 32px;
+        background:
+          radial-gradient(700px 280px at -10% -15%, rgba(79, 70, 229, 0.14), transparent 60%),
+          radial-gradient(760px 320px at 110% -10%, rgba(14, 165, 233, 0.12), transparent 62%),
+          linear-gradient(180deg, #f6f8ff, #eef2ff);
+        color: #0f172a;
+      }
+      .card {
+        max-width: 720px;
+        margin: 0 auto;
+        background: linear-gradient(
+          145deg,
+          rgba(255, 255, 255, 0.98),
+          rgba(246, 250, 255, 0.96)
+        );
+        border: 1px solid rgba(173, 194, 255, 0.55);
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow:
+          0 24px 44px rgba(15, 23, 42, 0.14),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8),
+          0 0 0 1px rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(3px);
+      }
+      .hero-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .hero-pill {
+        font-size: 12px;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 5px 11px;
+        background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+        color: #3730a3;
+        border: 1px solid #c7d2fe;
+      }
+      .steps {
+        margin-top: 14px;
+        display: grid;
+        gap: 8px;
+      }
+      .step {
+        background: linear-gradient(180deg, #f8fbff, #ffffff);
+        border: 1px solid #d8e7ff;
+        border-radius: 12px;
+        padding: 9px 12px;
+        color: #334155;
+        font-size: 13px;
+      }
+      .step strong {
+        color: #1e293b;
+      }
+      h1 {
+        margin-top: 0;
+        font-size: 22px;
+        letter-spacing: 0.2px;
+      }
+      p {
+        margin: 8px 0;
+        color: #475569;
+      }
+      button {
+        border: 0;
+        border-radius: 12px;
+        padding: 11px 16px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        cursor: pointer;
+        background: linear-gradient(135deg, #4f46e5 0%, #2563eb 55%, #0ea5e9 100%);
+        color: #fff;
+        box-shadow:
+          0 10px 22px rgba(37, 99, 235, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        transition: transform 0.15s ease, box-shadow 0.2s ease;
+      }
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.3);
+      }
+      button:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+      pre {
+        margin-top: 12px;
+        background: #0b1220;
+        color: #d6f5d6;
+        border-radius: 10px;
+        border: 1px solid #1e293b;
+        padding: 12px;
+        overflow: auto;
+      }
+      .cmp-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(2, 6, 23, 0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      .cmp-modal-card {
+        width: min(640px, 92vw);
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #dbe4ff;
+        padding: 18px;
+        box-shadow: 0 20px 45px rgba(2, 6, 23, 0.3);
+      }
+      .cmp-modal-card h3 {
+        margin: 0 0 8px;
+      }
+      .cmp-btn-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+      .cmp-brand-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+      .cmp-logo {
+        width: 42px;
+        height: 42px;
+        object-fit: contain;
+        border-radius: 10px;
+        border: 1px solid #dbe4ff;
+        background: #fff;
+        padding: 4px;
+      }
+      .cmp-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      .cmp-table th,
+      .cmp-table td {
+        border-bottom: 1px solid #e2e8f0;
+        padding: 8px;
+        text-align: left;
+        font-size: 13px;
+      }
+      .cmp-table th {
+        background: #f8fbff;
+      }
+      #status {
+        margin-top: 16px;
+        border-radius: 12px;
+        border: 1px solid #1e293b;
+        box-shadow:
+          0 10px 24px rgba(2, 6, 23, 0.18),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      }
+    </style>
+  </head>
+  <script src="http://0.0.0.0:8000/sdk/cmp.js" data-domain="localhost" defer></script>
+  <!-- On consent save, pass visitor_ref: CMP.getVisitorRef() (stable UUID in localStorage key cmp_visitor_ref) --><!-- On consent save, pass visitor_ref: CMP.getVisitorRef() (stable UUID in localStorage key cmp_visitor_ref) -->
+  <body>
+    <div class="card">
+      <div class="hero-top">
+        <h1>CMP Open Consent Demo</h1>
+        <span class="hero-pill">Manual QA</span>
+      </div>
+      <p>1) Create and publish a template for the localhost account.</p>
+      <p>2) Click the button below to open consent template popup.</p>
+      <button id="open-consent">Open Consent</button>
+      <div class="steps">
+        <div class="step"><strong>Step 1:</strong> Create + publish template from admin panel.</div>
+        <div class="step"><strong>Step 2:</strong> Generate active API key for <code>localhost</code>.</div>
+        <div class="step"><strong>Step 3:</strong> Click <strong>Open Consent</strong> and complete action flow.</div>
+      </div>
+      <pre id="status">Waiting for CMP SDK...</pre>
+    </div>
+
+    <!-- Copy this from API key integration step (domain as needed) -->
+    <script>
+      (function () {
+        var button = document.getElementById("open-consent");
+        var status = document.getElementById("status");
+        var query = new URLSearchParams(window.location.search);
+        var TEST_DOMAIN = String(query.get("domain") || "localhost").trim() || "localhost";
+
+        function setStatus(message, data) {
+          status.textContent = data ? message + "\n\n" + JSON.stringify(data, null, 2) : message;
+        }
+
+        function escapeHtml(value) {
+          return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        }
+
+        function cmpActionButtonStyle(configData) {
+          var c = String((configData && configData.color_code) || "").trim();
+          if (!c) {
+            var first = (configData && configData.buttons_json && configData.buttons_json[0]) || {};
+            c = String(first.color_code || "").trim();
+          }
+          if (!/^#[0-9A-Fa-f]{3}$|^#[0-9A-Fa-f]{6}$|^#[0-9A-Fa-f]{8}$/.test(c)) {
+            return "";
+          }
+          return (
+            "background:" +
+            c +
+            ";border-color:" +
+            c +
+            ";color:#fff;"
+          );
+        }
+
+        function formatPurposeName(category) {
+          return String(category || "")
+            .split(/[_\s]+/)
+            .filter(Boolean)
+            .map(function (part) {
+              return part.charAt(0).toUpperCase() + part.slice(1);
+            })
+            .join(" ");
+        }
+
+        function inferEventType(type, label) {
+          var value = (String(type || "") + " " + String(label || "")).toLowerCase();
+          if (value.indexOf("accept") >= 0) return "accept_all";
+          if (value.indexOf("reject") >= 0) return "reject_all";
+          if (value.indexOf("withdraw") >= 0) return "withdraw";
+          return "customize";
+        }
+
+        function buttonLabelFromType(type) {
+          var key = String(type || "").trim().toLowerCase();
+          if (!key) return "Action";
+          if (key === "accept_all") return "Accept All";
+          if (key === "reject_all") return "Reject All";
+          if (key === "customize") return "Customize";
+          if (key === "withdraw") return "Withdraw";
+          return key
+            .split("_")
+            .filter(Boolean)
+            .map(function (part) {
+              return part.charAt(0).toUpperCase() + part.slice(1);
+            })
+            .join(" ");
+        }
+
+        function wireCmp() {
+          if (
+            !window.CMP ||
+            typeof window.CMP.getConfig !== "function" ||
+            typeof window.CMP.createSession !== "function" ||
+            typeof window.CMP.saveConsent !== "function" ||
+            typeof window.CMP.getVisitorRef !== "function"
+          ) {
+            setStatus("CMP SDK load not ready yet...");
+            return setTimeout(wireCmp, 300);
+          }
+
+          setStatus("CMP SDK ready. Click 'Run Consent Flow'.");
+          var activeSession = null;
+          var activeTemplateId = null;
+
+          function closeModal() {
+            var existing = document.getElementById("cmp-demo-modal");
+            if (existing) existing.remove();
+          }
+
+        async function hasExistingConsent(templateId, domain, visitorRef) {
+          if (!window.CMP || typeof window.CMP.getCurrentConsent !== "function") {
+            throw new Error("SDK getCurrentConsent() is not available.");
+          }
+          try {
+            await window.CMP.getCurrentConsent(templateId, domain, visitorRef);
+            return true;
+          } catch (err) {
+            var msg = String((err && err.message) || "");
+            if (msg.toLowerCase().includes("consent not found")) {
+              return false;
+            }
+            throw err;
+          }
+        }
+
+          function buildDefaultCategoryMapFromPurposes(purposes) {
+            var map = {};
+            (purposes || []).forEach(function (purpose) {
+              var raw = Array.isArray(purpose.data_attributes)
+                ? purpose.data_attributes.join(", ")
+                : String(purpose.data_attribute || purpose.category || "").trim();
+              raw.split(",").forEach(function (token) {
+                var key = token.trim();
+                if (!key || Object.prototype.hasOwnProperty.call(map, key)) {
+                  return;
+                }
+                map[key] = key.toLowerCase() === "necessary";
+              });
+            });
+            return map;
+          }
+
+          function renderModal(configData) {
+            closeModal();
+            var purposes = Array.isArray(configData.purposes) ? configData.purposes : [];
+            var categoriesMap = buildDefaultCategoryMapFromPurposes(purposes);
+            var categories = Object.keys(categoriesMap);
+            var buttons = Array.isArray(configData.buttons_json) ? configData.buttons_json : [];
+            var tableSource = purposes.length
+              ? purposes.map(function (purpose, index) {
+                  var rawCategory = Array.isArray(purpose.data_attributes)
+                    ? purpose.data_attributes.join(", ")
+                    : String(purpose.data_attribute || purpose.category || "").trim();
+                  var categoryKeys = rawCategory
+                    .split(",")
+                    .map(function (item) {
+                      return item.trim();
+                    })
+                    .filter(Boolean);
+                  if (!categoryKeys.length) {
+                    categoryKeys = ["general_" + (index + 1)];
+                  }
+                  var checked = categoryKeys.some(function (key) {
+                    return !!categoriesMap[key];
+                  });
+                  return {
+                    categoryLabel: rawCategory || categoryKeys.join(", "),
+                    purposeLabel: String(purpose.purpose_name || purpose.name || "").trim() || formatPurposeName(rawCategory || categoryKeys[0]),
+                    categoryKeys: categoryKeys,
+                    checked: checked,
+                  };
+                })
+              : categories.map(function (category) {
+                  return {
+                    categoryLabel: category,
+                    purposeLabel: formatPurposeName(category),
+                    categoryKeys: [category],
+                    checked: !!categoriesMap[category],
+                  };
+                });
+            var tableRows = tableSource
+              .map(function (row, index) {
+                var inputId = "cmp-cat-" + index;
+                return (
+                  "<tr>" +
+                  '<td><input id="' + inputId + '" data-category-keys="' + escapeHtml(row.categoryKeys.join("|")) + '" type="checkbox" ' + (row.checked ? "checked" : "") + " /></td>" +
+                  "<td>" + escapeHtml(row.purposeLabel) + "</td>" +
+                  "<td>" + escapeHtml(row.categoryLabel) + "</td>" +
+                  "</tr>"
+                );
+              })
+              .join("");
+            var accentStyle = cmpActionButtonStyle(configData);
+            var buttonHtml = buttons
+              .map(function (btn, index) {
+                return (
+                  '<button class="cmp-action-btn"' +
+                  ' id="cmp-action-' + index + '"' +
+                  (accentStyle ? ' style="' + accentStyle + '"' : "") +
+                  ' data-type="' +
+                  escapeHtml(btn.type || "") +
+                  '" type="button">' +
+                  escapeHtml(buttonLabelFromType(btn.type) || ("Action " + (index + 1))) +
+                  "</button>"
+                );
+              })
+              .join("");
+            var modal = document.createElement("div");
+            modal.id = "cmp-demo-modal";
+            modal.className = "cmp-modal-backdrop";
+            modal.innerHTML =
+              '<div class="cmp-modal-card">' +
+              '<div class="cmp-brand-row">' +
+              (configData.logo_url ? '<img class="cmp-logo" src="' + escapeHtml(configData.logo_url) + '" alt="Logo" />' : "") +
+              "<h3>" +
+              escapeHtml(configData.header_text || "Consent Preferences") +
+              "</h3>" +
+              "</div>" +
+              "<p>" +
+              escapeHtml(configData.body_text || "Please manage your consent choices.") +
+              "</p>" +
+              (tableSource.length
+                ? '<table class="cmp-table"><thead><tr><th style="width:46px;">Use</th><th>Purpose</th><th>Data attributes</th></tr></thead><tbody>' + tableRows + "</tbody></table>"
+                : '<p>No categories configured in template.</p>') +
+              '<div class="cmp-btn-row">' +
+              (buttonHtml || '<button class="cmp-action-btn" data-type="customize" data-label="Save" type="button">Save</button>') +
+              '<button id="cmp-close" type="button">Close</button>' +
+              "</div>" +
+              (String(configData.footer_text || "").trim()
+                ? '<p class="muted" style="margin-top:10px;">' + escapeHtml(String(configData.footer_text || "").trim()) + "</p>"
+                : "") +
+              "</div>";
+            document.body.appendChild(modal);
+
+            function collectSelectedCategories() {
+              var selected = {};
+              var inputs = modal.querySelectorAll("input[data-category-keys]");
+              inputs.forEach(function (input) {
+                var keys = String(input.getAttribute("data-category-keys") || "")
+                  .split("|")
+                  .map(function (item) {
+                    return item.trim();
+                  })
+                  .filter(Boolean);
+                keys.forEach(function (key) {
+                  selected[key] = !!input.checked;
+                });
+              });
+              return selected;
+            }
+
+            buttons.forEach(function (btn, index) {
+              var actionBtn = document.getElementById("cmp-action-" + index);
+              if (!actionBtn) return;
+              actionBtn.onclick = function () {
+                var eventType = inferEventType(btn.type, "");
+                var selected = collectSelectedCategories();
+                if (eventType === "accept_all") {
+                  Object.keys(selected).forEach(function (key) {
+                    selected[key] = true;
+                  });
+                } else if (eventType === "reject_all") {
+                  Object.keys(selected).forEach(function (key) {
+                    selected[key] = false;
+                  });
+                }
+                submitConsent(selected, eventType);
+              };
+            });
+
+            document
+              .getElementById("cmp-close")
+              .addEventListener("click", function () {
+                closeModal();
+              });
+
+            modal.addEventListener("click", function (event) {
+              if (event.target === modal) {
+                closeModal();
+              }
+            });
+          }
+
+          async function submitConsent(selectedCategories, eventType) {
+            if (!activeSession || !activeTemplateId) {
+              setStatus("Session/template missing. Re-open consent.");
+              return;
+            }
+            try {
+              var payload = {
+                template_id: activeTemplateId,
+                session_id: activeSession.session_id,
+                domain: TEST_DOMAIN,
+                visitor_ref: window.CMP.getVisitorRef(),
+                event_type: eventType,
+                selected_categories_json: selectedCategories,
+                policy_version: "v1",
+                timestamp: new Date().toISOString(),
+              };
+              var consentResponse = await window.CMP.saveConsent(
+                payload,
+                activeSession.jwt_token,
+              );
+              setStatus("Consent saved successfully.", consentResponse);
+              closeModal();
+            } catch (err) {
+              setStatus(
+                "Consent save failed: " +
+                  (err && err.message ? err.message : "Unknown error"),
+              );
+            }
+          }
+
+          button.addEventListener("click", async function () {
+            button.disabled = true;
+            try {
+              var domain = TEST_DOMAIN;
+              var configResponse = await window.CMP.getConfig(domain);
+              var templateId =
+                configResponse && configResponse.data
+                  ? configResponse.data.template_id
+                  : null;
+              if (!templateId) {
+                throw new Error("Template id not found in config response.");
+              }
+              var visitorRef = window.CMP.getVisitorRef();
+              var alreadyConsented = await hasExistingConsent(
+                templateId,
+                domain,
+                visitorRef,
+              );
+              if (alreadyConsented) {
+                throw new Error("You have already signed consent.");
+              }
+              var sessionResponse = await window.CMP.createSession(domain);
+              var sessionData =
+                sessionResponse && sessionResponse.data
+                  ? sessionResponse.data
+                  : {};
+              if (!sessionData.jwt_token || !sessionData.session_id) {
+                throw new Error("Runtime session token not found.");
+              }
+              activeSession = sessionData;
+              activeTemplateId = templateId;
+              setStatus("Consent template opened.");
+              renderModal(configResponse.data || {});
+            } catch (err) {
+              setStatus(
+                "Flow failed: " +
+                  (err && err.message ? err.message : "Unknown error"),
+              );
+            } finally {
+              button.disabled = false;
+            }
+          });
+        }
+
+        wireCmp();
+      })();
+    </script>
+  </body>
+</html>
