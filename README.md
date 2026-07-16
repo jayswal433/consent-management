@@ -1,4 +1,4 @@
-# EveryCRED Consent Management Backend
+# Consent Management Backend
 
 A FastAPI microservice for managing citizen consent in compliance with India's Digital Personal Data Protection (DPDP) Act 2023. It handles consent forms, consent lifecycle, audit trails, data subject rights, and analytics for organisations that need to collect and prove lawful consent from their users.
 
