@@ -1,0 +1,23 @@
+name: everycred-consent-management
+
+services:
+
+  app:
+    container_name: everycred-consent-management-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    # network_mode: host — the container shares the EC2 instance's network stack.
+    # This means 'localhost' inside the container is the same as 'localhost' on
+    # the EC2 host, so a MySQL server running on the same instance is reachable
+    # at 127.0.0.1 without any MySQL bind-address or user-grant changes.
+    # Port mapping (ports:) is not used in host network mode — the server binds
+    # directly to port 9000 on the EC2 instance's network interfaces.
+    network_mode: host
+    environment:
+      SERVER_HOST: "0.0.0.0"
+      SERVER_PORT: "9000"
+      RUN_MIGRATIONS_ON_STARTUP: "false"
+    env_file:
+      - .env
