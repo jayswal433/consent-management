@@ -1,0 +1,42 @@
+[Unit]
+Description=DPDP Consent Management API
+Documentation=https://docs.yourdomain.com/consent-api
+After=network.target mysql.service redis.service
+Wants=mysql.service redis.service
+PartOf=multi-user.target
+
+[Service]
+Type=simple
+User=consent
+Group=consent
+WorkingDirectory=/opt/consent-api
+Environment="PYTHONUNBUFFERED=1"
+Environment="ENV=prod"
+EnvironmentFile=/opt/consent-api/.env
+
+# Run FastAPI app with Uvicorn: automatically uses all CPU cores (workers)
+ExecStart=/opt/consent-api/.venv/bin/python asgi.py --env prod
+
+# Auto-restart on crash
+Restart=always
+RestartSec=5
+StartLimitInterval=300
+StartLimitBurst=10
+
+# Security isolation
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/opt/consent-api /var/log/consent-api
+
+# Graceful shutdown timeout (Uvicorn default: 120s)
+TimeoutStopSec=120
+
+# Logging to systemd journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=consent-api
+
+[Install]
+WantedBy=multi-user.target
