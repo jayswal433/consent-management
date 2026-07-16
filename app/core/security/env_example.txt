@@ -1,0 +1,18 @@
+# ── DPDP Required Environment Variables ──────────────────────────────────────
+# Copy these into your .env file
+
+# AES-256 Data Encryption Key — 32 bytes = 64 hex chars
+# Generate: python -c "import os; print(os.urandom(32).hex())"
+DPDP_DEK_HEX=<64-hex-chars>
+
+# HMAC-SHA256 signing key for consent receipt tokens
+# Generate: python -c "import os; print(os.urandom(32).hex())"
+DPDP_HMAC_KEY_HEX=<64-hex-chars>
+
+# JWT secret for DPDP tokens (can reuse JWT_SECRET_KEY or use separate)
+JWT_SECRET_KEY=<long-random-string>
+JWT_ALGORITHM=HS256
+
+# System service credentials (client_credentials grant)
+DPDP_CLIENT_ID=dpdp-system
+DPDP_CLIENT_SECRET=<strong-secret>
